@@ -1,0 +1,21 @@
+{
+  "name": "purescript-free-canvas",
+  "description": "A free monad interface to the canvas",
+  "keywords": ["purescript"],
+  "ignore": [
+    "**/.*",
+    "bower_components",
+    "node_modules",
+    "output",
+    "tests",
+    "js",
+    "tmp",
+    "bower.json",
+    "Gruntfile.js",
+    "package.json"
+  ],
+  "dependencies": {
+    "purescript-canvas"           : "~0.1.6",
+    "purescript-free"             : "*"
+  }
+}
