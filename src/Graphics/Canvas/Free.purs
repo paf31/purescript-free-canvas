@@ -1,5 +1,6 @@
 module Graphics.Canvas.Free 
   ( Graphics()
+  , GraphicsF()
 
   , setLineWidth
   , setFillStyle
