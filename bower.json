@@ -16,6 +16,6 @@
   ],
   "dependencies": {
     "purescript-canvas"           : "~0.1.6",
-    "purescript-free"             : "*"
+    "purescript-free"             : "~0.4.0"
   }
 }

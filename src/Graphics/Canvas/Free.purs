@@ -178,7 +178,7 @@ putImageData :: C.ImageData -> Number -> Number -> Graphics Unit
 putImageData d x y = liftFC $ PutImageData d x y unit 
 
 runGraphics :: forall a eff. C.Context2D -> Graphics a -> Eff (canvas :: C.Canvas | eff) a
-runGraphics ctx = goEffC interp
+runGraphics ctx = runFreeCM interp
   where
   interp :: forall eff. Natural GraphicsF (Eff (canvas :: C.Canvas | eff))
   interp (SetLineWidth w a) = const a <$> C.setLineWidth w ctx
