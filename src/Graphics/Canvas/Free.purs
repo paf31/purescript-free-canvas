@@ -23,12 +23,18 @@ module Graphics.Canvas.Free
 
   , arc
   , rect
+  , fillRect
+  , strokeRect
+  , clearRect
 
   , scale
   , rotate
   , translate
   , transform
 
+  , textAlign
+  , setTextAlign
+  , font
   , setFont
   , fillText
   , strokeText
@@ -39,6 +45,9 @@ module Graphics.Canvas.Free
 
   , getImageData
   , putImageData
+  , putImageDataFull
+  , createImageData
+  , createImageDataCopy
 
   , runGraphics
   ) where
@@ -50,37 +59,46 @@ import Data.Coyoneda
 import qualified Graphics.Canvas as C
 
 data GraphicsF more
-  = SetLineWidth      Number      more
-  | SetFillStyle      String      more
-  | SetStrokeStyle    String      more
-  | SetShadowColor    String      more
-  | SetShadowBlur     Number      more
-  | SetShadowOffsetX  Number      more
-  | SetShadowOffsetY  Number      more
-  | SetLineCap        C.LineCap   more
-  | SetComposite      C.Composite more
-  | SetAlpha          Number      more
-  | BeginPath         more
-  | Stroke            more
-  | Fill              more
-  | Clip              more
-  | LineTo            Number      Number      more
-  | MoveTo            Number      Number      more
-  | ClosePath         more
-  | Arc               C.Arc       more
-  | Rect              C.Rectangle more
-  | Scale             Number      Number      more
-  | Rotate            Number      more
-  | Translate         Number      Number      more
-  | Transform         C.Transform more
-  | SetFont           String      more
-  | FillText          String      Number      Number    more
-  | StrokeText        String      Number      Number    more
-  | MeasureText       String      (C.TextMetrics -> more)
-  | Save              more
-  | Restore           more
-  | GetImageData      Number      Number      Number    Number   (C.ImageData -> more)
-  | PutImageData      C.ImageData Number      Number    more
+  = SetLineWidth         Number      more
+  | SetFillStyle         String      more
+  | SetStrokeStyle       String      more
+  | SetShadowColor       String      more
+  | SetShadowBlur        Number      more
+  | SetShadowOffsetX     Number      more
+  | SetShadowOffsetY     Number      more
+  | SetLineCap           C.LineCap   more
+  | SetComposite         C.Composite more
+  | SetAlpha             Number      more
+  | BeginPath            more
+  | Stroke               more
+  | Fill                 more
+  | Clip                 more
+  | LineTo               Number      Number      more
+  | MoveTo               Number      Number      more
+  | ClosePath            more
+  | Arc                  C.Arc       more
+  | Rect                 C.Rectangle more
+  | FillRect             C.Rectangle more
+  | StrokeRect           C.Rectangle more
+  | ClearRect            C.Rectangle more
+  | Scale                Number      Number      more
+  | Rotate               Number      more
+  | Translate            Number      Number      more
+  | Transform            C.Transform more
+  | TextAlign            (C.TextAlign -> more)
+  | SetTextAlign         C.TextAlign more
+  | Font                 (String -> more)
+  | SetFont              String      more
+  | FillText             String      Number      Number    more
+  | StrokeText           String      Number      Number    more
+  | MeasureText          String      (C.TextMetrics -> more)
+  | Save                 more
+  | Restore              more
+  | GetImageData         Number      Number      Number    Number   (C.ImageData -> more)
+  | PutImageData         C.ImageData Number      Number    more
+  | PutImageDataFull     C.ImageData Number      Number    Number   Number  Number  Number  more
+  | CreateImageData      Number      Number      more
+  | CreateImageDataCopy  C.ImageData (C.ImageData -> more)
 
 type Graphics a = FreeC GraphicsF a
 
@@ -141,6 +159,15 @@ arc a = liftFC $ Arc a unit
 rect :: C.Rectangle -> Graphics Unit
 rect r = liftFC $ Rect r unit
 
+fillRect :: C.Rectangle -> Graphics Unit
+fillRect r = liftFC $ FillRect r unit
+
+strokeRect :: C.Rectangle -> Graphics Unit
+strokeRect r = liftFC $ StrokeRect r unit
+
+clearRect :: C.Rectangle -> Graphics Unit
+clearRect r = liftFC $ ClearRect r unit
+
 scale :: Number -> Number -> Graphics Unit
 scale sx sy = liftFC $ Scale sx sy unit
 
@@ -152,6 +179,15 @@ translate tx ty = liftFC $ Translate tx ty unit
 
 transform :: C.Transform -> Graphics Unit
 transform tx = liftFC $ Transform tx unit
+
+textAlign :: Graphics C.TextAlign
+textAlign = liftFC $ TextAlign id
+
+setTextAlign :: C.TextAlign -> Graphics Unit
+setTextAlign ta = liftFC $ SetTextAlign ta unit
+
+font :: Graphics String
+font = liftFC $ Font id
 
 setFont :: String -> Graphics Unit
 setFont f = liftFC $ SetFont f unit
@@ -175,41 +211,58 @@ getImageData :: Number -> Number -> Number -> Number -> Graphics C.ImageData
 getImageData x y w h = liftFC $ GetImageData x y w h id
 
 putImageData :: C.ImageData -> Number -> Number -> Graphics Unit
-putImageData d x y = liftFC $ PutImageData d x y unit 
+putImageData d x y = liftFC $ PutImageData d x y unit
+
+putImageDataFull :: C.ImageData -> Number -> Number -> Number -> Number -> Number -> Number -> Graphics Unit
+putImageDataFull d x y dx dy dw dh = liftFC $ PutImageDataFull d x y dx dy dw dh unit
+
+createImageData :: Number -> Number -> Graphics Unit
+createImageData w h = liftFC $ CreateImageData w h unit
+
+createImageDataCopy :: C.ImageData -> Graphics C.ImageData
+createImageDataCopy d = liftFC $ CreateImageDataCopy d id
 
 runGraphics :: forall a eff. C.Context2D -> Graphics a -> Eff (canvas :: C.Canvas | eff) a
 runGraphics ctx = runFreeCM interp
   where
   interp :: forall eff. Natural GraphicsF (Eff (canvas :: C.Canvas | eff))
-  interp (SetLineWidth w a) = const a <$> C.setLineWidth w ctx
-  interp (SetFillStyle s a) = const a <$> C.setFillStyle s ctx
-  interp (SetStrokeStyle s a) = const a <$> C.setStrokeStyle s ctx 
-  interp (SetShadowColor c a) = const a <$> C.setShadowColor c ctx
-  interp (SetShadowBlur n a) = const a <$> C.setShadowBlur n ctx
-  interp (SetShadowOffsetX n a) = const a <$> C.setShadowOffsetX n ctx
-  interp (SetShadowOffsetY n a) = const a <$> C.setShadowOffsetY n ctx
-  interp (SetLineCap lc a) = const a <$> C.setLineCap lc ctx
-  interp (SetComposite c a) = const a <$> C.setGlobalCompositeOperation ctx c
-  interp (SetAlpha s a) = const a <$> C.setGlobalAlpha ctx s
-  interp (BeginPath a) = const a <$> C.beginPath ctx
-  interp (Stroke a) = const a <$> C.stroke ctx
-  interp (Fill a) = const a <$> C.fill ctx
-  interp (Clip a) = const a <$> C.clip ctx
-  interp (LineTo x y a) = const a <$> C.lineTo ctx x y
-  interp (MoveTo x y a) = const a <$> C.moveTo ctx x y
-  interp (ClosePath a) = const a <$> C.closePath ctx
-  interp (Arc arc a) = const a <$> C.arc ctx arc
-  interp (Rect r a) = const a <$> C.rect ctx r
-  interp (Scale sx sy a) = const a <$> C.scale { scaleX: sx, scaleY: sy } ctx
-  interp (Rotate th a) = const a <$> C.rotate th ctx
-  interp (Translate tx ty a) = const a <$> C.translate { translateX: tx, translateY: ty } ctx
-  interp (Transform tx a) = const a <$> C.transform tx ctx
-  interp (SetFont f a) = const a <$> C.setFont f ctx
-  interp (FillText s x y a) = const a <$> C.fillText ctx s x y
-  interp (StrokeText s x y a) = const a <$> C.strokeText ctx s x y
-  interp (MeasureText s k) = k <$> C.measureText ctx s
-  interp (Save a) = const a <$> C.save ctx
-  interp (Restore a) = const a <$> C.restore ctx
-  interp (GetImageData x y w h k) = k <$> C.getImageData ctx x y w h
-  interp (PutImageData d x y a) = const a <$> C.putImageData ctx d x y
-
+  interp (SetLineWidth w a)                     = const a <$> C.setLineWidth w ctx
+  interp (SetFillStyle s a)                     = const a <$> C.setFillStyle s ctx
+  interp (SetStrokeStyle s a)                   = const a <$> C.setStrokeStyle s ctx 
+  interp (SetShadowColor c a)                   = const a <$> C.setShadowColor c ctx
+  interp (SetShadowBlur n a)                    = const a <$> C.setShadowBlur n ctx
+  interp (SetShadowOffsetX n a)                 = const a <$> C.setShadowOffsetX n ctx
+  interp (SetShadowOffsetY n a)                 = const a <$> C.setShadowOffsetY n ctx
+  interp (SetLineCap lc a)                      = const a <$> C.setLineCap lc ctx
+  interp (SetComposite c a)                     = const a <$> C.setGlobalCompositeOperation ctx c
+  interp (SetAlpha s a)                         = const a <$> C.setGlobalAlpha ctx s
+  interp (BeginPath a)                          = const a <$> C.beginPath ctx
+  interp (Stroke a)                             = const a <$> C.stroke ctx
+  interp (Fill a)                               = const a <$> C.fill ctx
+  interp (Clip a)                               = const a <$> C.clip ctx
+  interp (LineTo x y a)                         = const a <$> C.lineTo ctx x y
+  interp (MoveTo x y a)                         = const a <$> C.moveTo ctx x y
+  interp (ClosePath a)                          = const a <$> C.closePath ctx
+  interp (Arc arc a)                            = const a <$> C.arc ctx arc
+  interp (Rect r a)                             = const a <$> C.rect ctx r
+  interp (FillRect r a)                         = const a <$> C.fillRect ctx r
+  interp (StrokeRect r a)                       = const a <$> C.strokeRect ctx r
+  interp (ClearRect r a)                        = const a <$> C.clearRect ctx r
+  interp (Scale sx sy a)                        = const a <$> C.scale { scaleX: sx, scaleY: sy } ctx
+  interp (Rotate th a)                          = const a <$> C.rotate th ctx
+  interp (Translate tx ty a)                    = const a <$> C.translate { translateX: tx, translateY: ty } ctx
+  interp (Transform tx a)                       = const a <$> C.transform tx ctx
+  interp (TextAlign k)                          = k <$> C.textAlign ctx
+  interp (SetTextAlign ta a)                    = const a <$> C.setTextAlign ctx ta
+  interp (Font k)                               = k <$> C.font ctx
+  interp (SetFont f a)                          = const a <$> C.setFont f ctx
+  interp (FillText s x y a)                     = const a <$> C.fillText ctx s x y
+  interp (StrokeText s x y a)                   = const a <$> C.strokeText ctx s x y
+  interp (MeasureText s k)                      = k <$> C.measureText ctx s
+  interp (Save a)                               = const a <$> C.save ctx
+  interp (Restore a)                            = const a <$> C.restore ctx
+  interp (GetImageData x y w h k)               = k <$> C.getImageData ctx x y w h
+  interp (PutImageData d x y a)                 = const a <$> C.putImageData ctx d x y
+  interp (PutImageDataFull d x y dx dy dw dh a) = const a <$> C.putImageDataFull ctx d x y dx dy dw dh
+  interp (CreateImageData w h a)                = const a <$> C.createImageData ctx w h
+  interp (CreateImageDataCopy d k)              = k <$> C.createImageDataCopy ctx d
