@@ -32,6 +32,7 @@ module Graphics.Canvas.Free
 
   , textAlign
   , setTextAlign
+  , font
   , setFont
   , fillText
   , strokeText
@@ -82,6 +83,7 @@ data GraphicsF more
   | Transform            C.Transform more
   | TextAlign            (C.TextAlign -> more)
   | SetTextAlign         C.TextAlign more
+  | Font                 (String -> more)
   | SetFont              String      more
   | FillText             String      Number      Number    more
   | StrokeText           String      Number      Number    more
@@ -174,6 +176,9 @@ textAlign = liftFC $ TextAlign id
 setTextAlign :: C.TextAlign -> Graphics Unit
 setTextAlign ta = liftFC $ SetTextAlign ta unit
 
+font :: Graphics String
+font = liftFC $ Font id
+
 setFont :: String -> Graphics Unit
 setFont f = liftFC $ SetFont f unit
 
@@ -237,6 +242,7 @@ runGraphics ctx = runFreeCM interp
   interp (Transform tx a)                       = const a <$> C.transform tx ctx
   interp (TextAlign k)                          = k <$> C.textAlign ctx
   interp (SetTextAlign ta a)                    = const a <$> C.setTextAlign ctx ta
+  interp (Font k)                               = k <$> C.font ctx
   interp (SetFont f a)                          = const a <$> C.setFont f ctx
   interp (FillText s x y a)                     = const a <$> C.fillText ctx s x y
   interp (StrokeText s x y a)                   = const a <$> C.strokeText ctx s x y
