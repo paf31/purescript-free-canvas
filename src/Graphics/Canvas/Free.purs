@@ -23,6 +23,7 @@ module Graphics.Canvas.Free
 
   , arc
   , rect
+  , clearRect
 
   , scale
   , rotate
@@ -69,6 +70,7 @@ data GraphicsF more
   | ClosePath         more
   | Arc               C.Arc       more
   | Rect              C.Rectangle more
+  | ClearRect         C.Rectangle more
   | Scale             Number      Number      more
   | Rotate            Number      more
   | Translate         Number      Number      more
@@ -141,6 +143,9 @@ arc a = liftFC $ Arc a unit
 rect :: C.Rectangle -> Graphics Unit
 rect r = liftFC $ Rect r unit
 
+clearRect :: C.Rectangle -> Graphics Unit
+clearRect r = liftFC $ ClearRect r unit
+
 scale :: Number -> Number -> Graphics Unit
 scale sx sy = liftFC $ Scale sx sy unit
 
@@ -200,6 +205,7 @@ runGraphics ctx = runFreeCM interp
   interp (ClosePath a) = const a <$> C.closePath ctx
   interp (Arc arc a) = const a <$> C.arc ctx arc
   interp (Rect r a) = const a <$> C.rect ctx r
+  interp (ClearRect r a) = const a <$> C.clearRect ctx r
   interp (Scale sx sy a) = const a <$> C.scale { scaleX: sx, scaleY: sy } ctx
   interp (Rotate th a) = const a <$> C.rotate th ctx
   interp (Translate tx ty a) = const a <$> C.translate { translateX: tx, translateY: ty } ctx
