@@ -30,6 +30,7 @@ module Graphics.Canvas.Free
   , translate
   , transform
 
+  , textAlign
   , setTextAlign
   , setFont
   , fillText
@@ -79,6 +80,7 @@ data GraphicsF more
   | Rotate               Number      more
   | Translate            Number      Number      more
   | Transform            C.Transform more
+  | TextAlign            (C.TextAlign -> more)
   | SetTextAlign         C.TextAlign more
   | SetFont              String      more
   | FillText             String      Number      Number    more
@@ -166,6 +168,9 @@ translate tx ty = liftFC $ Translate tx ty unit
 transform :: C.Transform -> Graphics Unit
 transform tx = liftFC $ Transform tx unit
 
+textAlign :: Graphics C.TextAlign
+textAlign = liftFC $ TextAlign id
+
 setTextAlign :: C.TextAlign -> Graphics Unit
 setTextAlign ta = liftFC $ SetTextAlign ta unit
 
@@ -230,6 +235,7 @@ runGraphics ctx = runFreeCM interp
   interp (Rotate th a)                          = const a <$> C.rotate th ctx
   interp (Translate tx ty a)                    = const a <$> C.translate { translateX: tx, translateY: ty } ctx
   interp (Transform tx a)                       = const a <$> C.transform tx ctx
+  interp (TextAlign k)                          = k <$> C.textAlign ctx
   interp (SetTextAlign ta a)                    = const a <$> C.setTextAlign ctx ta
   interp (SetFont f a)                          = const a <$> C.setFont f ctx
   interp (FillText s x y a)                     = const a <$> C.fillText ctx s x y
