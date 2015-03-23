@@ -1,10 +1,11 @@
 module Main where
 
+import Data.Maybe.Unsafe (fromJust)
 import Graphics.Canvas (getCanvasElementById, getContext2D)
 import Graphics.Canvas.Free
 
 main = do
-  canvas <- getCanvasElementById "canvas"
+  canvas <- fromJust <$> getCanvasElementById "canvas"
   context <- getContext2D canvas
 
   runGraphics context $ do
