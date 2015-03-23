@@ -15,7 +15,7 @@
     "package.json"
   ],
   "dependencies": {
-    "purescript-canvas"           : "~0.1.6",
+    "purescript-canvas"           : "~0.2.0",
     "purescript-free"             : "~0.4.0"
   }
 }
