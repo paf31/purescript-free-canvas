@@ -43,6 +43,7 @@ module Graphics.Canvas.Free
   , putImageData
   , putImageDataFull
   , createImageData
+  , createImageDataCopy
 
   , runGraphics
   ) where
@@ -54,41 +55,42 @@ import Data.Coyoneda
 import qualified Graphics.Canvas as C
 
 data GraphicsF more
-  = SetLineWidth      Number      more
-  | SetFillStyle      String      more
-  | SetStrokeStyle    String      more
-  | SetShadowColor    String      more
-  | SetShadowBlur     Number      more
-  | SetShadowOffsetX  Number      more
-  | SetShadowOffsetY  Number      more
-  | SetLineCap        C.LineCap   more
-  | SetComposite      C.Composite more
-  | SetAlpha          Number      more
-  | BeginPath         more
-  | Stroke            more
-  | Fill              more
-  | Clip              more
-  | LineTo            Number      Number      more
-  | MoveTo            Number      Number      more
-  | ClosePath         more
-  | Arc               C.Arc       more
-  | Rect              C.Rectangle more
-  | ClearRect         C.Rectangle more
-  | Scale             Number      Number      more
-  | Rotate            Number      more
-  | Translate         Number      Number      more
-  | Transform         C.Transform more
-  | SetTextAlign      C.TextAlign more
-  | SetFont           String      more
-  | FillText          String      Number      Number    more
-  | StrokeText        String      Number      Number    more
-  | MeasureText       String      (C.TextMetrics -> more)
-  | Save              more
-  | Restore           more
-  | GetImageData      Number      Number      Number    Number   (C.ImageData -> more)
-  | PutImageData      C.ImageData Number      Number    more
-  | PutImageDataFull  C.ImageData Number      Number    Number   Number  Number  Number  more
-  | CreateImageData   Number      Number      more
+  = SetLineWidth         Number      more
+  | SetFillStyle         String      more
+  | SetStrokeStyle       String      more
+  | SetShadowColor       String      more
+  | SetShadowBlur        Number      more
+  | SetShadowOffsetX     Number      more
+  | SetShadowOffsetY     Number      more
+  | SetLineCap           C.LineCap   more
+  | SetComposite         C.Composite more
+  | SetAlpha             Number      more
+  | BeginPath            more
+  | Stroke               more
+  | Fill                 more
+  | Clip                 more
+  | LineTo               Number      Number      more
+  | MoveTo               Number      Number      more
+  | ClosePath            more
+  | Arc                  C.Arc       more
+  | Rect                 C.Rectangle more
+  | ClearRect            C.Rectangle more
+  | Scale                Number      Number      more
+  | Rotate               Number      more
+  | Translate            Number      Number      more
+  | Transform            C.Transform more
+  | SetTextAlign         C.TextAlign more
+  | SetFont              String      more
+  | FillText             String      Number      Number    more
+  | StrokeText           String      Number      Number    more
+  | MeasureText          String      (C.TextMetrics -> more)
+  | Save                 more
+  | Restore              more
+  | GetImageData         Number      Number      Number    Number   (C.ImageData -> more)
+  | PutImageData         C.ImageData Number      Number    more
+  | PutImageDataFull     C.ImageData Number      Number    Number   Number  Number  Number  more
+  | CreateImageData      Number      Number      more
+  | CreateImageDataCopy  C.ImageData (C.ImageData -> more)
 
 type Graphics a = FreeC GraphicsF a
 
@@ -197,6 +199,9 @@ putImageDataFull d x y dx dy dw dh = liftFC $ PutImageDataFull d x y dx dy dw dh
 createImageData :: Number -> Number -> Graphics Unit
 createImageData w h = liftFC $ CreateImageData w h unit
 
+createImageDataCopy :: C.ImageData -> Graphics C.ImageData
+createImageDataCopy d = liftFC $ CreateImageDataCopy d id
+
 runGraphics :: forall a eff. C.Context2D -> Graphics a -> Eff (canvas :: C.Canvas | eff) a
 runGraphics ctx = runFreeCM interp
   where
@@ -236,3 +241,4 @@ runGraphics ctx = runFreeCM interp
   interp (PutImageData d x y a)                 = const a <$> C.putImageData ctx d x y
   interp (PutImageDataFull d x y dx dy dw dh a) = const a <$> C.putImageDataFull ctx d x y dx dy dw dh
   interp (CreateImageData w h a)                = const a <$> C.createImageData ctx w h
+  interp (CreateImageDataCopy d k)              = k <$> C.createImageDataCopy ctx d
