@@ -30,6 +30,7 @@ module Graphics.Canvas.Free
   , translate
   , transform
 
+  , setTextAlign
   , setFont
   , fillText
   , strokeText
@@ -75,6 +76,7 @@ data GraphicsF more
   | Rotate            Number      more
   | Translate         Number      Number      more
   | Transform         C.Transform more
+  | SetTextAlign      C.TextAlign more
   | SetFont           String      more
   | FillText          String      Number      Number    more
   | StrokeText        String      Number      Number    more
@@ -158,6 +160,9 @@ translate tx ty = liftFC $ Translate tx ty unit
 transform :: C.Transform -> Graphics Unit
 transform tx = liftFC $ Transform tx unit
 
+setTextAlign :: C.TextAlign -> Graphics Unit
+setTextAlign ta = liftFC $ SetTextAlign ta unit
+
 setFont :: String -> Graphics Unit
 setFont f = liftFC $ SetFont f unit
 
@@ -186,36 +191,37 @@ runGraphics :: forall a eff. C.Context2D -> Graphics a -> Eff (canvas :: C.Canva
 runGraphics ctx = runFreeCM interp
   where
   interp :: forall eff. Natural GraphicsF (Eff (canvas :: C.Canvas | eff))
-  interp (SetLineWidth w a) = const a <$> C.setLineWidth w ctx
-  interp (SetFillStyle s a) = const a <$> C.setFillStyle s ctx
-  interp (SetStrokeStyle s a) = const a <$> C.setStrokeStyle s ctx 
-  interp (SetShadowColor c a) = const a <$> C.setShadowColor c ctx
-  interp (SetShadowBlur n a) = const a <$> C.setShadowBlur n ctx
-  interp (SetShadowOffsetX n a) = const a <$> C.setShadowOffsetX n ctx
-  interp (SetShadowOffsetY n a) = const a <$> C.setShadowOffsetY n ctx
-  interp (SetLineCap lc a) = const a <$> C.setLineCap lc ctx
-  interp (SetComposite c a) = const a <$> C.setGlobalCompositeOperation ctx c
-  interp (SetAlpha s a) = const a <$> C.setGlobalAlpha ctx s
-  interp (BeginPath a) = const a <$> C.beginPath ctx
-  interp (Stroke a) = const a <$> C.stroke ctx
-  interp (Fill a) = const a <$> C.fill ctx
-  interp (Clip a) = const a <$> C.clip ctx
-  interp (LineTo x y a) = const a <$> C.lineTo ctx x y
-  interp (MoveTo x y a) = const a <$> C.moveTo ctx x y
-  interp (ClosePath a) = const a <$> C.closePath ctx
-  interp (Arc arc a) = const a <$> C.arc ctx arc
-  interp (Rect r a) = const a <$> C.rect ctx r
-  interp (ClearRect r a) = const a <$> C.clearRect ctx r
-  interp (Scale sx sy a) = const a <$> C.scale { scaleX: sx, scaleY: sy } ctx
-  interp (Rotate th a) = const a <$> C.rotate th ctx
-  interp (Translate tx ty a) = const a <$> C.translate { translateX: tx, translateY: ty } ctx
-  interp (Transform tx a) = const a <$> C.transform tx ctx
-  interp (SetFont f a) = const a <$> C.setFont f ctx
-  interp (FillText s x y a) = const a <$> C.fillText ctx s x y
-  interp (StrokeText s x y a) = const a <$> C.strokeText ctx s x y
-  interp (MeasureText s k) = k <$> C.measureText ctx s
-  interp (Save a) = const a <$> C.save ctx
-  interp (Restore a) = const a <$> C.restore ctx
+  interp (SetLineWidth w a)       = const a <$> C.setLineWidth w ctx
+  interp (SetFillStyle s a)       = const a <$> C.setFillStyle s ctx
+  interp (SetStrokeStyle s a)     = const a <$> C.setStrokeStyle s ctx 
+  interp (SetShadowColor c a)     = const a <$> C.setShadowColor c ctx
+  interp (SetShadowBlur n a)      = const a <$> C.setShadowBlur n ctx
+  interp (SetShadowOffsetX n a)   = const a <$> C.setShadowOffsetX n ctx
+  interp (SetShadowOffsetY n a)   = const a <$> C.setShadowOffsetY n ctx
+  interp (SetLineCap lc a)        = const a <$> C.setLineCap lc ctx
+  interp (SetComposite c a)       = const a <$> C.setGlobalCompositeOperation ctx c
+  interp (SetAlpha s a)           = const a <$> C.setGlobalAlpha ctx s
+  interp (BeginPath a)            = const a <$> C.beginPath ctx
+  interp (Stroke a)               = const a <$> C.stroke ctx
+  interp (Fill a)                 = const a <$> C.fill ctx
+  interp (Clip a)                 = const a <$> C.clip ctx
+  interp (LineTo x y a)           = const a <$> C.lineTo ctx x y
+  interp (MoveTo x y a)           = const a <$> C.moveTo ctx x y
+  interp (ClosePath a)            = const a <$> C.closePath ctx
+  interp (Arc arc a)              = const a <$> C.arc ctx arc
+  interp (Rect r a)               = const a <$> C.rect ctx r
+  interp (ClearRect r a)          = const a <$> C.clearRect ctx r
+  interp (Scale sx sy a)          = const a <$> C.scale { scaleX: sx, scaleY: sy } ctx
+  interp (Rotate th a)            = const a <$> C.rotate th ctx
+  interp (Translate tx ty a)      = const a <$> C.translate { translateX: tx, translateY: ty } ctx
+  interp (Transform tx a)         = const a <$> C.transform tx ctx
+  interp (SetTextAlign ta a)      = const a <$> C.setTextAlign ctx ta
+  interp (SetFont f a)            = const a <$> C.setFont f ctx
+  interp (FillText s x y a)       = const a <$> C.fillText ctx s x y
+  interp (StrokeText s x y a)     = const a <$> C.strokeText ctx s x y
+  interp (MeasureText s k)        = k <$> C.measureText ctx s
+  interp (Save a)                 = const a <$> C.save ctx
+  interp (Restore a)              = const a <$> C.restore ctx
   interp (GetImageData x y w h k) = k <$> C.getImageData ctx x y w h
-  interp (PutImageData d x y a) = const a <$> C.putImageData ctx d x y
+  interp (PutImageData d x y a)   = const a <$> C.putImageData ctx d x y
 
