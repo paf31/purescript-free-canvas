@@ -97,7 +97,7 @@ data GraphicsF more
   | GetImageData         Number      Number      Number    Number   (C.ImageData -> more)
   | PutImageData         C.ImageData Number      Number    more
   | PutImageDataFull     C.ImageData Number      Number    Number   Number  Number  Number  more
-  | CreateImageData      Number      Number      more
+  | CreateImageData      Number      Number      (C.ImageData -> more)
   | CreateImageDataCopy  C.ImageData (C.ImageData -> more)
 
 type Graphics a = FreeC GraphicsF a
@@ -216,8 +216,8 @@ putImageData d x y = liftFC $ PutImageData d x y unit
 putImageDataFull :: C.ImageData -> Number -> Number -> Number -> Number -> Number -> Number -> Graphics Unit
 putImageDataFull d x y dx dy dw dh = liftFC $ PutImageDataFull d x y dx dy dw dh unit
 
-createImageData :: Number -> Number -> Graphics Unit
-createImageData w h = liftFC $ CreateImageData w h unit
+createImageData :: Number -> Number -> Graphics C.ImageData
+createImageData w h = liftFC $ CreateImageData w h id
 
 createImageDataCopy :: C.ImageData -> Graphics C.ImageData
 createImageDataCopy d = liftFC $ CreateImageDataCopy d id
@@ -264,5 +264,5 @@ runGraphics ctx = runFreeCM interp
   interp (GetImageData x y w h k)               = k <$> C.getImageData ctx x y w h
   interp (PutImageData d x y a)                 = const a <$> C.putImageData ctx d x y
   interp (PutImageDataFull d x y dx dy dw dh a) = const a <$> C.putImageDataFull ctx d x y dx dy dw dh
-  interp (CreateImageData w h a)                = const a <$> C.createImageData ctx w h
+  interp (CreateImageData w h k)                = k <$> C.createImageData ctx w h
   interp (CreateImageDataCopy d k)              = k <$> C.createImageDataCopy ctx d
