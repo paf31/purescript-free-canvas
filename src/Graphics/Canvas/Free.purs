@@ -52,6 +52,8 @@ module Graphics.Canvas.Free
   , runGraphics
   ) where
 
+import Prelude
+
 import Control.Monad.Eff
 import Control.Monad.Free
 import Data.Coyoneda

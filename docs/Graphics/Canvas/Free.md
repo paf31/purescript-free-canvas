@@ -1,5 +1,3 @@
-# Module Documentation
-
 ## Module Graphics.Canvas.Free
 
 #### `GraphicsF`
@@ -8,13 +6,11 @@
 data GraphicsF more
 ```
 
-
 #### `Graphics`
 
 ``` purescript
 type Graphics a = FreeC GraphicsF a
 ```
-
 
 #### `setLineWidth`
 
@@ -22,13 +18,11 @@ type Graphics a = FreeC GraphicsF a
 setLineWidth :: Number -> Graphics Unit
 ```
 
-
 #### `setFillStyle`
 
 ``` purescript
 setFillStyle :: String -> Graphics Unit
 ```
-
 
 #### `setStrokeStyle`
 
@@ -36,13 +30,11 @@ setFillStyle :: String -> Graphics Unit
 setStrokeStyle :: String -> Graphics Unit
 ```
 
-
 #### `setShadowColor`
 
 ``` purescript
 setShadowColor :: String -> Graphics Unit
 ```
-
 
 #### `setShadowBlur`
 
@@ -50,13 +42,11 @@ setShadowColor :: String -> Graphics Unit
 setShadowBlur :: Number -> Graphics Unit
 ```
 
-
 #### `setShadowOffsetX`
 
 ``` purescript
 setShadowOffsetX :: Number -> Graphics Unit
 ```
-
 
 #### `setShadowOffsetY`
 
@@ -64,20 +54,17 @@ setShadowOffsetX :: Number -> Graphics Unit
 setShadowOffsetY :: Number -> Graphics Unit
 ```
 
-
 #### `setLineCap`
 
 ``` purescript
-setLineCap :: C.LineCap -> Graphics Unit
+setLineCap :: LineCap -> Graphics Unit
 ```
-
 
 #### `setComposite`
 
 ``` purescript
-setComposite :: C.Composite -> Graphics Unit
+setComposite :: Composite -> Graphics Unit
 ```
-
 
 #### `setAlpha`
 
@@ -85,13 +72,11 @@ setComposite :: C.Composite -> Graphics Unit
 setAlpha :: Number -> Graphics Unit
 ```
 
-
 #### `beginPath`
 
 ``` purescript
 beginPath :: Graphics Unit
 ```
-
 
 #### `stroke`
 
@@ -99,13 +84,11 @@ beginPath :: Graphics Unit
 stroke :: Graphics Unit
 ```
 
-
 #### `fill`
 
 ``` purescript
 fill :: Graphics Unit
 ```
-
 
 #### `clip`
 
@@ -113,13 +96,11 @@ fill :: Graphics Unit
 clip :: Graphics Unit
 ```
 
-
 #### `lineTo`
 
 ``` purescript
 lineTo :: Number -> Number -> Graphics Unit
 ```
-
 
 #### `moveTo`
 
@@ -127,48 +108,41 @@ lineTo :: Number -> Number -> Graphics Unit
 moveTo :: Number -> Number -> Graphics Unit
 ```
 
-
 #### `closePath`
 
 ``` purescript
 closePath :: Graphics Unit
 ```
 
-
 #### `arc`
 
 ``` purescript
-arc :: C.Arc -> Graphics Unit
+arc :: Arc -> Graphics Unit
 ```
-
 
 #### `rect`
 
 ``` purescript
-rect :: C.Rectangle -> Graphics Unit
+rect :: Rectangle -> Graphics Unit
 ```
-
 
 #### `fillRect`
 
 ``` purescript
-fillRect :: C.Rectangle -> Graphics Unit
+fillRect :: Rectangle -> Graphics Unit
 ```
-
 
 #### `strokeRect`
 
 ``` purescript
-strokeRect :: C.Rectangle -> Graphics Unit
+strokeRect :: Rectangle -> Graphics Unit
 ```
-
 
 #### `clearRect`
 
 ``` purescript
-clearRect :: C.Rectangle -> Graphics Unit
+clearRect :: Rectangle -> Graphics Unit
 ```
-
 
 #### `scale`
 
@@ -176,13 +150,11 @@ clearRect :: C.Rectangle -> Graphics Unit
 scale :: Number -> Number -> Graphics Unit
 ```
 
-
 #### `rotate`
 
 ``` purescript
 rotate :: Number -> Graphics Unit
 ```
-
 
 #### `translate`
 
@@ -190,27 +162,23 @@ rotate :: Number -> Graphics Unit
 translate :: Number -> Number -> Graphics Unit
 ```
 
-
 #### `transform`
 
 ``` purescript
-transform :: C.Transform -> Graphics Unit
+transform :: Transform -> Graphics Unit
 ```
-
 
 #### `textAlign`
 
 ``` purescript
-textAlign :: Graphics C.TextAlign
+textAlign :: Graphics TextAlign
 ```
-
 
 #### `setTextAlign`
 
 ``` purescript
-setTextAlign :: C.TextAlign -> Graphics Unit
+setTextAlign :: TextAlign -> Graphics Unit
 ```
-
 
 #### `font`
 
@@ -218,13 +186,11 @@ setTextAlign :: C.TextAlign -> Graphics Unit
 font :: Graphics String
 ```
 
-
 #### `setFont`
 
 ``` purescript
 setFont :: String -> Graphics Unit
 ```
-
 
 #### `fillText`
 
@@ -232,20 +198,17 @@ setFont :: String -> Graphics Unit
 fillText :: String -> Number -> Number -> Graphics Unit
 ```
 
-
 #### `strokeText`
 
 ``` purescript
 strokeText :: String -> Number -> Number -> Graphics Unit
 ```
 
-
 #### `measureText`
 
 ``` purescript
-measureText :: String -> Graphics C.TextMetrics
+measureText :: String -> Graphics TextMetrics
 ```
-
 
 #### `save`
 
@@ -253,55 +216,46 @@ measureText :: String -> Graphics C.TextMetrics
 save :: Graphics Unit
 ```
 
-
 #### `restore`
 
 ``` purescript
 restore :: Graphics Unit
 ```
 
-
 #### `getImageData`
 
 ``` purescript
-getImageData :: Number -> Number -> Number -> Number -> Graphics C.ImageData
+getImageData :: Number -> Number -> Number -> Number -> Graphics ImageData
 ```
-
 
 #### `putImageData`
 
 ``` purescript
-putImageData :: C.ImageData -> Number -> Number -> Graphics Unit
+putImageData :: ImageData -> Number -> Number -> Graphics Unit
 ```
-
 
 #### `putImageDataFull`
 
 ``` purescript
-putImageDataFull :: C.ImageData -> Number -> Number -> Number -> Number -> Number -> Number -> Graphics Unit
+putImageDataFull :: ImageData -> Number -> Number -> Number -> Number -> Number -> Number -> Graphics Unit
 ```
-
 
 #### `createImageData`
 
 ``` purescript
-createImageData :: Number -> Number -> Graphics Unit
+createImageData :: Number -> Number -> Graphics ImageData
 ```
-
 
 #### `createImageDataCopy`
 
 ``` purescript
-createImageDataCopy :: C.ImageData -> Graphics C.ImageData
+createImageDataCopy :: ImageData -> Graphics ImageData
 ```
-
 
 #### `runGraphics`
 
 ``` purescript
-runGraphics :: forall a eff. C.Context2D -> Graphics a -> Eff (canvas :: C.Canvas | eff) a
+runGraphics :: forall a eff. Context2D -> Graphics a -> Eff (canvas :: Canvas | eff) a
 ```
-
-
 
 
