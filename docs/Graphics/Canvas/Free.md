@@ -252,6 +252,12 @@ createImageData :: Number -> Number -> Graphics ImageData
 createImageDataCopy :: ImageData -> Graphics ImageData
 ```
 
+#### `drawImage`
+
+``` purescript
+drawImage :: CanvasImageSource -> Number -> Number -> Graphics Unit
+```
+
 #### `runGraphics`
 
 ``` purescript
