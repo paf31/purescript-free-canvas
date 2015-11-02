@@ -48,6 +48,7 @@ module Graphics.Canvas.Free
   , putImageDataFull
   , createImageData
   , createImageDataCopy
+  , drawImage
 
   , runGraphics
   ) where
@@ -101,6 +102,7 @@ data GraphicsF more
   | PutImageDataFull     C.ImageData Number      Number    Number   Number  Number  Number  more
   | CreateImageData      Number      Number      (C.ImageData -> more)
   | CreateImageDataCopy  C.ImageData (C.ImageData -> more)
+  | DrawImage            C.CanvasImageSource     Number    Number   more
 
 type Graphics a = FreeC GraphicsF a
 
@@ -224,6 +226,9 @@ createImageData w h = liftFC $ CreateImageData w h id
 createImageDataCopy :: C.ImageData -> Graphics C.ImageData
 createImageDataCopy d = liftFC $ CreateImageDataCopy d id
 
+drawImage :: C.CanvasImageSource -> Number -> Number -> Graphics Unit
+drawImage src x y = liftFC $ DrawImage src x y unit
+
 runGraphics :: forall a eff. C.Context2D -> Graphics a -> Eff (canvas :: C.Canvas | eff) a
 runGraphics ctx = runFreeCM interp
   where
@@ -268,3 +273,4 @@ runGraphics ctx = runFreeCM interp
   interp (PutImageDataFull d x y dx dy dw dh a) = const a <$> C.putImageDataFull ctx d x y dx dy dw dh
   interp (CreateImageData w h k)                = k <$> C.createImageData ctx w h
   interp (CreateImageDataCopy d k)              = k <$> C.createImageDataCopy ctx d
+  interp (DrawImage src x y a)                  = const a <$> C.drawImage ctx src x y
