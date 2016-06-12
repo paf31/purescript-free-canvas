@@ -1,6 +1,7 @@
-module Graphics.Canvas.Free 
-  ( Graphics()
-  , GraphicsF()
+module Graphics.Canvas.Free
+  ( Graphics
+  , GraphicsT
+  , GraphicsF
 
   , setLineWidth
   , setFillStyle
@@ -11,9 +12,9 @@ module Graphics.Canvas.Free
   , setShadowOffsetY
   , setLineCap
   , setComposite
-  , setAlpha 
+  , setAlpha
 
-  , beginPath 
+  , beginPath
   , stroke
   , fill
   , clip
@@ -51,226 +52,285 @@ module Graphics.Canvas.Free
   , drawImage
 
   , runGraphics
+  , runGraphicsT
   ) where
 
 import Prelude
 
-import Control.Monad.Eff
-import Control.Monad.Free
-import Data.Coyoneda
-
-import qualified Graphics.Canvas as C
+import Control.Monad.Eff (Eff)
+import Control.Monad.Free.Trans (FreeT, liftFreeT, hoistFreeT, runFreeT)
+import Data.Coyoneda (Coyoneda, hoistCoyoneda, liftCoyoneda, lowerCoyoneda)
+import Data.Identity (Identity, runIdentity)
+import Graphics.Canvas as Canvas
 
 data GraphicsF more
-  = SetLineWidth         Number      more
-  | SetFillStyle         String      more
-  | SetStrokeStyle       String      more
-  | SetShadowColor       String      more
-  | SetShadowBlur        Number      more
-  | SetShadowOffsetX     Number      more
-  | SetShadowOffsetY     Number      more
-  | SetLineCap           C.LineCap   more
-  | SetComposite         C.Composite more
-  | SetAlpha             Number      more
+  = SetLineWidth         Number more
+  | SetFillStyle         String more
+  | SetStrokeStyle       String more
+  | SetShadowColor       String more
+  | SetShadowBlur        Number more
+  | SetShadowOffsetX     Number more
+  | SetShadowOffsetY     Number more
+  | SetLineCap           Canvas.LineCap more
+  | SetComposite         Canvas.Composite more
+  | SetAlpha             Number more
   | BeginPath            more
   | Stroke               more
   | Fill                 more
   | Clip                 more
-  | LineTo               Number      Number      more
-  | MoveTo               Number      Number      more
+  | LineTo               Number Number more
+  | MoveTo               Number Number more
   | ClosePath            more
-  | Arc                  C.Arc       more
-  | Rect                 C.Rectangle more
-  | FillRect             C.Rectangle more
-  | StrokeRect           C.Rectangle more
-  | ClearRect            C.Rectangle more
-  | Scale                Number      Number      more
-  | Rotate               Number      more
-  | Translate            Number      Number      more
-  | Transform            C.Transform more
-  | TextAlign            (C.TextAlign -> more)
-  | SetTextAlign         C.TextAlign more
+  | Arc                  Canvas.Arc       more
+  | Rect                 Canvas.Rectangle more
+  | FillRect             Canvas.Rectangle more
+  | StrokeRect           Canvas.Rectangle more
+  | ClearRect            Canvas.Rectangle more
+  | Scale                Number Number more
+  | Rotate               Number more
+  | Translate            Number Number more
+  | Transform            Canvas.Transform more
+  | TextAlign            (Canvas.TextAlign -> more)
+  | SetTextAlign         Canvas.TextAlign more
   | Font                 (String -> more)
-  | SetFont              String      more
-  | FillText             String      Number      Number    more
-  | StrokeText           String      Number      Number    more
-  | MeasureText          String      (C.TextMetrics -> more)
+  | SetFont              String more
+  | FillText             String Number Number more
+  | StrokeText           String Number Number more
+  | MeasureText          String (Canvas.TextMetrics -> more)
   | Save                 more
   | Restore              more
-  | GetImageData         Number      Number      Number    Number   (C.ImageData -> more)
-  | PutImageData         C.ImageData Number      Number    more
-  | PutImageDataFull     C.ImageData Number      Number    Number   Number  Number  Number  more
-  | CreateImageData      Number      Number      (C.ImageData -> more)
-  | CreateImageDataCopy  C.ImageData (C.ImageData -> more)
-  | DrawImage            C.CanvasImageSource     Number    Number   more
+  | GetImageData         Number Number Number Number (Canvas.ImageData -> more)
+  | PutImageData         Canvas.ImageData Number Number more
+  | PutImageDataFull     Canvas.ImageData Number Number Number Number Number Number more
+  | CreateImageData      Number Number (Canvas.ImageData -> more)
+  | CreateImageDataCopy  Canvas.ImageData (Canvas.ImageData -> more)
+  | DrawImage            Canvas.CanvasImageSource Number Number more
 
-type Graphics a = FreeC GraphicsF a
+type GraphicsT m = FreeT (Coyoneda GraphicsF) m
 
-setLineWidth :: Number -> Graphics Unit
-setLineWidth w = liftFC $ SetLineWidth w unit
+type Graphics = GraphicsT Identity
 
-setFillStyle :: String -> Graphics Unit
-setFillStyle s = liftFC $ SetFillStyle s unit
+liftGraphics :: forall m a. Monad m => GraphicsF a -> GraphicsT m a
+liftGraphics = liftFreeT <<< liftCoyoneda
 
-setStrokeStyle :: String -> Graphics Unit
-setStrokeStyle s = liftFC $ SetStrokeStyle s unit
+setLineWidth :: forall m. Monad m => Number -> GraphicsT m Unit
+setLineWidth w = liftGraphics $ SetLineWidth w unit
 
-setShadowColor :: String -> Graphics Unit
-setShadowColor c = liftFC $ SetShadowColor c unit
+setFillStyle :: forall m. Monad m => String -> GraphicsT m Unit
+setFillStyle s = liftGraphics $ SetFillStyle s unit
 
-setShadowBlur :: Number -> Graphics Unit
-setShadowBlur n = liftFC $ SetShadowBlur n unit
+setStrokeStyle :: forall m. Monad m => String -> GraphicsT m Unit
+setStrokeStyle s = liftGraphics $ SetStrokeStyle s unit
 
-setShadowOffsetX :: Number -> Graphics Unit
-setShadowOffsetX n = liftFC $ SetShadowOffsetX n unit
+setShadowColor :: forall m. Monad m => String -> GraphicsT m Unit
+setShadowColor c = liftGraphics $ SetShadowColor c unit
 
-setShadowOffsetY :: Number -> Graphics Unit
-setShadowOffsetY n = liftFC $ SetShadowOffsetY n unit
+setShadowBlur :: forall m. Monad m => Number -> GraphicsT m Unit
+setShadowBlur n = liftGraphics $ SetShadowBlur n unit
 
-setLineCap :: C.LineCap -> Graphics Unit
-setLineCap lc = liftFC $ SetLineCap lc unit
+setShadowOffsetX :: forall m. Monad m => Number -> GraphicsT m Unit
+setShadowOffsetX n = liftGraphics $ SetShadowOffsetX n unit
 
-setComposite :: C.Composite -> Graphics Unit
-setComposite c = liftFC $ SetComposite c unit
+setShadowOffsetY :: forall m. Monad m => Number -> GraphicsT m Unit
+setShadowOffsetY n = liftGraphics $ SetShadowOffsetY n unit
 
-setAlpha :: Number -> Graphics Unit
-setAlpha a = liftFC $ SetAlpha a unit
+setLineCap :: forall m. Monad m => Canvas.LineCap -> GraphicsT m Unit
+setLineCap lc = liftGraphics $ SetLineCap lc unit
 
-beginPath :: Graphics Unit
-beginPath = liftFC $ BeginPath unit
+setComposite :: forall m. Monad m => Canvas.Composite -> GraphicsT m Unit
+setComposite c = liftGraphics $ SetComposite c unit
 
-stroke :: Graphics Unit
-stroke = liftFC $ Stroke unit
+setAlpha :: forall m. Monad m => Number -> GraphicsT m Unit
+setAlpha a = liftGraphics $ SetAlpha a unit
 
-fill :: Graphics Unit
-fill = liftFC $ Fill unit
+beginPath :: forall m. Monad m => GraphicsT m Unit
+beginPath = liftGraphics $ BeginPath unit
 
-clip :: Graphics Unit
-clip = liftFC $ Clip unit
+stroke :: forall m. Monad m => GraphicsT m Unit
+stroke = liftGraphics $ Stroke unit
 
-lineTo :: Number -> Number -> Graphics Unit
-lineTo x y = liftFC $ LineTo x y unit
+fill :: forall m. Monad m => GraphicsT m Unit
+fill = liftGraphics $ Fill unit
 
-moveTo :: Number -> Number -> Graphics Unit
-moveTo x y = liftFC $ MoveTo x y unit
+clip :: forall m. Monad m => GraphicsT m Unit
+clip = liftGraphics $ Clip unit
 
-closePath :: Graphics Unit
-closePath = liftFC $ ClosePath unit
+lineTo :: forall m. Monad m => Number -> Number -> GraphicsT m Unit
+lineTo x y = liftGraphics $ LineTo x y unit
 
-arc :: C.Arc -> Graphics Unit
-arc a = liftFC $ Arc a unit
+moveTo :: forall m. Monad m => Number -> Number -> GraphicsT m Unit
+moveTo x y = liftGraphics $ MoveTo x y unit
 
-rect :: C.Rectangle -> Graphics Unit
-rect r = liftFC $ Rect r unit
+closePath :: forall m. Monad m => GraphicsT m Unit
+closePath = liftGraphics $ ClosePath unit
 
-fillRect :: C.Rectangle -> Graphics Unit
-fillRect r = liftFC $ FillRect r unit
+arc :: forall m. Monad m => Canvas.Arc -> GraphicsT m Unit
+arc a = liftGraphics $ Arc a unit
 
-strokeRect :: C.Rectangle -> Graphics Unit
-strokeRect r = liftFC $ StrokeRect r unit
+rect :: forall m. Monad m => Canvas.Rectangle -> GraphicsT m Unit
+rect r = liftGraphics $ Rect r unit
 
-clearRect :: C.Rectangle -> Graphics Unit
-clearRect r = liftFC $ ClearRect r unit
+fillRect :: forall m. Monad m => Canvas.Rectangle -> GraphicsT m Unit
+fillRect r = liftGraphics $ FillRect r unit
 
-scale :: Number -> Number -> Graphics Unit
-scale sx sy = liftFC $ Scale sx sy unit
+strokeRect :: forall m. Monad m => Canvas.Rectangle -> GraphicsT m Unit
+strokeRect r = liftGraphics $ StrokeRect r unit
 
-rotate :: Number -> Graphics Unit
-rotate th = liftFC $ Rotate th unit
+clearRect :: forall m. Monad m => Canvas.Rectangle -> GraphicsT m Unit
+clearRect r = liftGraphics $ ClearRect r unit
 
-translate :: Number -> Number -> Graphics Unit
-translate tx ty = liftFC $ Translate tx ty unit
+scale :: forall m. Monad m => Number -> Number -> GraphicsT m Unit
+scale sx sy = liftGraphics $ Scale sx sy unit
 
-transform :: C.Transform -> Graphics Unit
-transform tx = liftFC $ Transform tx unit
+rotate :: forall m. Monad m => Number -> GraphicsT m Unit
+rotate th = liftGraphics $ Rotate th unit
 
-textAlign :: Graphics C.TextAlign
-textAlign = liftFC $ TextAlign id
+translate :: forall m. Monad m => Number -> Number -> GraphicsT m Unit
+translate tx ty = liftGraphics $ Translate tx ty unit
 
-setTextAlign :: C.TextAlign -> Graphics Unit
-setTextAlign ta = liftFC $ SetTextAlign ta unit
+transform :: forall m. Monad m => Canvas.Transform -> GraphicsT m Unit
+transform tx = liftGraphics $ Transform tx unit
 
-font :: Graphics String
-font = liftFC $ Font id
+textAlign :: forall m. Monad m => GraphicsT m Canvas.TextAlign
+textAlign = liftGraphics $ TextAlign id
 
-setFont :: String -> Graphics Unit
-setFont f = liftFC $ SetFont f unit
+setTextAlign :: forall m. Monad m => Canvas.TextAlign -> GraphicsT m Unit
+setTextAlign ta = liftGraphics $ SetTextAlign ta unit
 
-fillText :: String -> Number -> Number -> Graphics Unit
-fillText s x y = liftFC $ FillText s x y unit
+font :: forall m. Monad m => GraphicsT m String
+font = liftGraphics $ Font id
 
-strokeText :: String -> Number -> Number -> Graphics Unit
-strokeText s x y = liftFC $ StrokeText s x y unit
+setFont :: forall m. Monad m => String -> GraphicsT m Unit
+setFont f = liftGraphics $ SetFont f unit
 
-measureText :: String -> Graphics C.TextMetrics 
-measureText s = liftFC $ MeasureText s id
+fillText :: forall m. Monad m => String -> Number -> Number -> GraphicsT m Unit
+fillText s x y = liftGraphics $ FillText s x y unit
 
-save :: Graphics Unit
-save = liftFC $ Save unit
+strokeText :: forall m. Monad m => String -> Number -> Number -> GraphicsT m Unit
+strokeText s x y = liftGraphics $ StrokeText s x y unit
 
-restore :: Graphics Unit
-restore = liftFC $ Restore unit
+measureText :: forall m. Monad m => String -> GraphicsT m Canvas.TextMetrics
+measureText s = liftGraphics $ MeasureText s id
 
-getImageData :: Number -> Number -> Number -> Number -> Graphics C.ImageData
-getImageData x y w h = liftFC $ GetImageData x y w h id
+save :: forall m. Monad m => GraphicsT m Unit
+save = liftGraphics $ Save unit
 
-putImageData :: C.ImageData -> Number -> Number -> Graphics Unit
-putImageData d x y = liftFC $ PutImageData d x y unit
+restore :: forall m. Monad m => GraphicsT m Unit
+restore = liftGraphics $ Restore unit
 
-putImageDataFull :: C.ImageData -> Number -> Number -> Number -> Number -> Number -> Number -> Graphics Unit
-putImageDataFull d x y dx dy dw dh = liftFC $ PutImageDataFull d x y dx dy dw dh unit
+getImageData :: forall m. Monad m => Number -> Number -> Number -> Number -> GraphicsT m Canvas.ImageData
+getImageData x y w h = liftGraphics $ GetImageData x y w h id
 
-createImageData :: Number -> Number -> Graphics C.ImageData
-createImageData w h = liftFC $ CreateImageData w h id
+putImageData :: forall m. Monad m => Canvas.ImageData -> Number -> Number -> GraphicsT m Unit
+putImageData d x y = liftGraphics $ PutImageData d x y unit
 
-createImageDataCopy :: C.ImageData -> Graphics C.ImageData
-createImageDataCopy d = liftFC $ CreateImageDataCopy d id
+putImageDataFull :: forall m. Monad m => Canvas.ImageData -> Number -> Number -> Number -> Number -> Number -> Number -> GraphicsT m Unit
+putImageDataFull d x y dx dy dw dh = liftGraphics $ PutImageDataFull d x y dx dy dw dh unit
 
-drawImage :: C.CanvasImageSource -> Number -> Number -> Graphics Unit
-drawImage src x y = liftFC $ DrawImage src x y unit
+createImageData :: forall m. Monad m => Number -> Number -> GraphicsT m Canvas.ImageData
+createImageData w h = liftGraphics $ CreateImageData w h id
 
-runGraphics :: forall a eff. C.Context2D -> Graphics a -> Eff (canvas :: C.Canvas | eff) a
-runGraphics ctx = runFreeCM interp
-  where
-  interp :: forall eff. Natural GraphicsF (Eff (canvas :: C.Canvas | eff))
-  interp (SetLineWidth w a)                     = const a <$> C.setLineWidth w ctx
-  interp (SetFillStyle s a)                     = const a <$> C.setFillStyle s ctx
-  interp (SetStrokeStyle s a)                   = const a <$> C.setStrokeStyle s ctx 
-  interp (SetShadowColor c a)                   = const a <$> C.setShadowColor c ctx
-  interp (SetShadowBlur n a)                    = const a <$> C.setShadowBlur n ctx
-  interp (SetShadowOffsetX n a)                 = const a <$> C.setShadowOffsetX n ctx
-  interp (SetShadowOffsetY n a)                 = const a <$> C.setShadowOffsetY n ctx
-  interp (SetLineCap lc a)                      = const a <$> C.setLineCap lc ctx
-  interp (SetComposite c a)                     = const a <$> C.setGlobalCompositeOperation ctx c
-  interp (SetAlpha s a)                         = const a <$> C.setGlobalAlpha ctx s
-  interp (BeginPath a)                          = const a <$> C.beginPath ctx
-  interp (Stroke a)                             = const a <$> C.stroke ctx
-  interp (Fill a)                               = const a <$> C.fill ctx
-  interp (Clip a)                               = const a <$> C.clip ctx
-  interp (LineTo x y a)                         = const a <$> C.lineTo ctx x y
-  interp (MoveTo x y a)                         = const a <$> C.moveTo ctx x y
-  interp (ClosePath a)                          = const a <$> C.closePath ctx
-  interp (Arc arc a)                            = const a <$> C.arc ctx arc
-  interp (Rect r a)                             = const a <$> C.rect ctx r
-  interp (FillRect r a)                         = const a <$> C.fillRect ctx r
-  interp (StrokeRect r a)                       = const a <$> C.strokeRect ctx r
-  interp (ClearRect r a)                        = const a <$> C.clearRect ctx r
-  interp (Scale sx sy a)                        = const a <$> C.scale { scaleX: sx, scaleY: sy } ctx
-  interp (Rotate th a)                          = const a <$> C.rotate th ctx
-  interp (Translate tx ty a)                    = const a <$> C.translate { translateX: tx, translateY: ty } ctx
-  interp (Transform tx a)                       = const a <$> C.transform tx ctx
-  interp (TextAlign k)                          = k <$> C.textAlign ctx
-  interp (SetTextAlign ta a)                    = const a <$> C.setTextAlign ctx ta
-  interp (Font k)                               = k <$> C.font ctx
-  interp (SetFont f a)                          = const a <$> C.setFont f ctx
-  interp (FillText s x y a)                     = const a <$> C.fillText ctx s x y
-  interp (StrokeText s x y a)                   = const a <$> C.strokeText ctx s x y
-  interp (MeasureText s k)                      = k <$> C.measureText ctx s
-  interp (Save a)                               = const a <$> C.save ctx
-  interp (Restore a)                            = const a <$> C.restore ctx
-  interp (GetImageData x y w h k)               = k <$> C.getImageData ctx x y w h
-  interp (PutImageData d x y a)                 = const a <$> C.putImageData ctx d x y
-  interp (PutImageDataFull d x y dx dy dw dh a) = const a <$> C.putImageDataFull ctx d x y dx dy dw dh
-  interp (CreateImageData w h k)                = k <$> C.createImageData ctx w h
-  interp (CreateImageDataCopy d k)              = k <$> C.createImageDataCopy ctx d
-  interp (DrawImage src x y a)                  = const a <$> C.drawImage ctx src x y
+createImageDataCopy :: forall m. Monad m => Canvas.ImageData -> GraphicsT m Canvas.ImageData
+createImageDataCopy d = liftGraphics $ CreateImageDataCopy d id
+
+drawImage :: forall m. Monad m => Canvas.CanvasImageSource -> Number -> Number -> GraphicsT m Unit
+drawImage src x y = liftGraphics $ DrawImage src x y unit
+
+runGraphics
+  :: forall a eff
+   . Canvas.Context2D
+  -> Graphics a
+  -> Eff (canvas :: Canvas.CANVAS | eff) a
+runGraphics ctx = runFreeT (lowerCoyoneda <<< hoistCoyoneda (interp ctx))
+              <<< hoistFreeT (pure <<< runIdentity)
+
+runGraphicsT
+  :: forall a eff
+   . Canvas.Context2D
+  -> GraphicsT (Eff (canvas :: Canvas.CANVAS | eff)) a
+  -> Eff (canvas :: Canvas.CANVAS | eff) a
+runGraphicsT ctx = runFreeT (lowerCoyoneda <<< hoistCoyoneda (interp ctx))
+
+interp :: forall eff. Canvas.Context2D -> GraphicsF ~> Eff (canvas :: Canvas.CANVAS | eff)
+interp ctx (SetLineWidth w a) =
+  const a <$> Canvas.setLineWidth w ctx
+interp ctx (SetFillStyle s a) =
+  const a <$> Canvas.setFillStyle s ctx
+interp ctx (SetStrokeStyle s a) =
+  const a <$> Canvas.setStrokeStyle s ctx
+interp ctx (SetShadowColor c a) =
+  const a <$> Canvas.setShadowColor c ctx
+interp ctx (SetShadowBlur n a) =
+  const a <$> Canvas.setShadowBlur n ctx
+interp ctx (SetShadowOffsetX n a) =
+  const a <$> Canvas.setShadowOffsetX n ctx
+interp ctx (SetShadowOffsetY n a) =
+  const a <$> Canvas.setShadowOffsetY n ctx
+interp ctx (SetLineCap lc a) =
+  const a <$> Canvas.setLineCap lc ctx
+interp ctx (SetComposite c a) =
+  const a <$> Canvas.setGlobalCompositeOperation ctx c
+interp ctx (SetAlpha s a) =
+  const a <$> Canvas.setGlobalAlpha ctx s
+interp ctx (BeginPath a) =
+  const a <$> Canvas.beginPath ctx
+interp ctx (Stroke a) =
+  const a <$> Canvas.stroke ctx
+interp ctx (Fill a) =
+  const a <$> Canvas.fill ctx
+interp ctx (Clip a) =
+  const a <$> Canvas.clip ctx
+interp ctx (LineTo x y a) =
+  const a <$> Canvas.lineTo ctx x y
+interp ctx (MoveTo x y a) =
+  const a <$> Canvas.moveTo ctx x y
+interp ctx (ClosePath a) =
+  const a <$> Canvas.closePath ctx
+interp ctx (Arc arc_ a) =
+  const a <$> Canvas.arc ctx arc_
+interp ctx (Rect r a) =
+  const a <$> Canvas.rect ctx r
+interp ctx (FillRect r a) =
+  const a <$> Canvas.fillRect ctx r
+interp ctx (StrokeRect r a) =
+  const a <$> Canvas.strokeRect ctx r
+interp ctx (ClearRect r a) =
+  const a <$> Canvas.clearRect ctx r
+interp ctx (Scale sx sy a) =
+  const a <$> Canvas.scale { scaleX: sx, scaleY: sy } ctx
+interp ctx (Rotate th a) =
+  const a <$> Canvas.rotate th ctx
+interp ctx (Translate tx ty a) =
+  const a <$> Canvas.translate { translateX: tx, translateY: ty } ctx
+interp ctx (Transform tx a) =
+  const a <$> Canvas.transform tx ctx
+interp ctx (TextAlign k) =
+  k <$> Canvas.textAlign ctx
+interp ctx (SetTextAlign ta a) =
+  const a <$> Canvas.setTextAlign ctx ta
+interp ctx (Font k) =
+  k <$> Canvas.font ctx
+interp ctx (SetFont f a) =
+  const a <$> Canvas.setFont f ctx
+interp ctx (FillText s x y a) =
+  const a <$> Canvas.fillText ctx s x y
+interp ctx (StrokeText s x y a) =
+  const a <$> Canvas.strokeText ctx s x y
+interp ctx (MeasureText s k) =
+  k <$> Canvas.measureText ctx s
+interp ctx (Save a) =
+  const a <$> Canvas.save ctx
+interp ctx (Restore a) =
+  const a <$> Canvas.restore ctx
+interp ctx (GetImageData x y w h k) =
+  k <$> Canvas.getImageData ctx x y w h
+interp ctx (PutImageData d x y a) =
+  const a <$> Canvas.putImageData ctx d x y
+interp ctx (PutImageDataFull d x y dx dy dw dh a) =
+  const a <$> Canvas.putImageDataFull ctx d x y dx dy dw dh
+interp ctx (CreateImageData w h k) =
+  k <$> Canvas.createImageData ctx w h
+interp ctx (CreateImageDataCopy d k) =
+  k <$> Canvas.createImageDataCopy ctx d
+interp ctx (DrawImage src x y a) =
+  const a <$> Canvas.drawImage ctx src x y

@@ -1,7 +1,9 @@
 {
   "name": "purescript-free-canvas",
   "description": "A free monad interface to the canvas",
-  "keywords": ["purescript"],
+  "keywords": [
+    "purescript"
+  ],
   "ignore": [
     "**/.*",
     "bower_components",
@@ -14,8 +16,13 @@
     "Gruntfile.js",
     "package.json"
   ],
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/paf31/purescript-free-canvas.git"
+  },
   "dependencies": {
-    "purescript-canvas"           : "^0.3.0",
-    "purescript-free"             : "^0.5.0"
+    "purescript-canvas": "^1.0.0",
+    "purescript-freet": "^1.0.0",
+    "purescript-free": "^1.0.0"
   }
 }

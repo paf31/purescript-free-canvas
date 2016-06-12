@@ -6,262 +6,274 @@
 data GraphicsF more
 ```
 
+#### `GraphicsT`
+
+``` purescript
+type GraphicsT m = FreeT (Coyoneda GraphicsF) m
+```
+
 #### `Graphics`
 
 ``` purescript
-type Graphics a = FreeC GraphicsF a
+type Graphics = GraphicsT Identity
 ```
 
 #### `setLineWidth`
 
 ``` purescript
-setLineWidth :: Number -> Graphics Unit
+setLineWidth :: forall m. Number -> GraphicsT m Unit
 ```
 
 #### `setFillStyle`
 
 ``` purescript
-setFillStyle :: String -> Graphics Unit
+setFillStyle :: forall m. String -> GraphicsT m Unit
 ```
 
 #### `setStrokeStyle`
 
 ``` purescript
-setStrokeStyle :: String -> Graphics Unit
+setStrokeStyle :: forall m. String -> GraphicsT m Unit
 ```
 
 #### `setShadowColor`
 
 ``` purescript
-setShadowColor :: String -> Graphics Unit
+setShadowColor :: forall m. String -> GraphicsT m Unit
 ```
 
 #### `setShadowBlur`
 
 ``` purescript
-setShadowBlur :: Number -> Graphics Unit
+setShadowBlur :: forall m. Number -> GraphicsT m Unit
 ```
 
 #### `setShadowOffsetX`
 
 ``` purescript
-setShadowOffsetX :: Number -> Graphics Unit
+setShadowOffsetX :: forall m. Number -> GraphicsT m Unit
 ```
 
 #### `setShadowOffsetY`
 
 ``` purescript
-setShadowOffsetY :: Number -> Graphics Unit
+setShadowOffsetY :: forall m. Number -> GraphicsT m Unit
 ```
 
 #### `setLineCap`
 
 ``` purescript
-setLineCap :: LineCap -> Graphics Unit
+setLineCap :: forall m. LineCap -> GraphicsT m Unit
 ```
 
 #### `setComposite`
 
 ``` purescript
-setComposite :: Composite -> Graphics Unit
+setComposite :: forall m. Composite -> GraphicsT m Unit
 ```
 
 #### `setAlpha`
 
 ``` purescript
-setAlpha :: Number -> Graphics Unit
+setAlpha :: forall m. Number -> GraphicsT m Unit
 ```
 
 #### `beginPath`
 
 ``` purescript
-beginPath :: Graphics Unit
+beginPath :: forall m. GraphicsT m Unit
 ```
 
 #### `stroke`
 
 ``` purescript
-stroke :: Graphics Unit
+stroke :: forall m. GraphicsT m Unit
 ```
 
 #### `fill`
 
 ``` purescript
-fill :: Graphics Unit
+fill :: forall m. GraphicsT m Unit
 ```
 
 #### `clip`
 
 ``` purescript
-clip :: Graphics Unit
+clip :: forall m. GraphicsT m Unit
 ```
 
 #### `lineTo`
 
 ``` purescript
-lineTo :: Number -> Number -> Graphics Unit
+lineTo :: forall m. Number -> Number -> GraphicsT m Unit
 ```
 
 #### `moveTo`
 
 ``` purescript
-moveTo :: Number -> Number -> Graphics Unit
+moveTo :: forall m. Number -> Number -> GraphicsT m Unit
 ```
 
 #### `closePath`
 
 ``` purescript
-closePath :: Graphics Unit
+closePath :: forall m. GraphicsT m Unit
 ```
 
 #### `arc`
 
 ``` purescript
-arc :: Arc -> Graphics Unit
+arc :: forall m. Arc -> GraphicsT m Unit
 ```
 
 #### `rect`
 
 ``` purescript
-rect :: Rectangle -> Graphics Unit
+rect :: forall m. Rectangle -> GraphicsT m Unit
 ```
 
 #### `fillRect`
 
 ``` purescript
-fillRect :: Rectangle -> Graphics Unit
+fillRect :: forall m. Rectangle -> GraphicsT m Unit
 ```
 
 #### `strokeRect`
 
 ``` purescript
-strokeRect :: Rectangle -> Graphics Unit
+strokeRect :: forall m. Rectangle -> GraphicsT m Unit
 ```
 
 #### `clearRect`
 
 ``` purescript
-clearRect :: Rectangle -> Graphics Unit
+clearRect :: forall m. Rectangle -> GraphicsT m Unit
 ```
 
 #### `scale`
 
 ``` purescript
-scale :: Number -> Number -> Graphics Unit
+scale :: forall m. Number -> Number -> GraphicsT m Unit
 ```
 
 #### `rotate`
 
 ``` purescript
-rotate :: Number -> Graphics Unit
+rotate :: forall m. Number -> GraphicsT m Unit
 ```
 
 #### `translate`
 
 ``` purescript
-translate :: Number -> Number -> Graphics Unit
+translate :: forall m. Number -> Number -> GraphicsT m Unit
 ```
 
 #### `transform`
 
 ``` purescript
-transform :: Transform -> Graphics Unit
+transform :: forall m. Transform -> GraphicsT m Unit
 ```
 
 #### `textAlign`
 
 ``` purescript
-textAlign :: Graphics TextAlign
+textAlign :: forall m. GraphicsT m TextAlign
 ```
 
 #### `setTextAlign`
 
 ``` purescript
-setTextAlign :: TextAlign -> Graphics Unit
+setTextAlign :: forall m. TextAlign -> GraphicsT m Unit
 ```
 
 #### `font`
 
 ``` purescript
-font :: Graphics String
+font :: forall m. GraphicsT m String
 ```
 
 #### `setFont`
 
 ``` purescript
-setFont :: String -> Graphics Unit
+setFont :: forall m. String -> GraphicsT m Unit
 ```
 
 #### `fillText`
 
 ``` purescript
-fillText :: String -> Number -> Number -> Graphics Unit
+fillText :: forall m. String -> Number -> Number -> GraphicsT m Unit
 ```
 
 #### `strokeText`
 
 ``` purescript
-strokeText :: String -> Number -> Number -> Graphics Unit
+strokeText :: forall m. String -> Number -> Number -> GraphicsT m Unit
 ```
 
 #### `measureText`
 
 ``` purescript
-measureText :: String -> Graphics TextMetrics
+measureText :: forall m. String -> GraphicsT m TextMetrics
 ```
 
 #### `save`
 
 ``` purescript
-save :: Graphics Unit
+save :: forall m. GraphicsT m Unit
 ```
 
 #### `restore`
 
 ``` purescript
-restore :: Graphics Unit
+restore :: forall m. GraphicsT m Unit
 ```
 
 #### `getImageData`
 
 ``` purescript
-getImageData :: Number -> Number -> Number -> Number -> Graphics ImageData
+getImageData :: forall m. Number -> Number -> Number -> Number -> GraphicsT m ImageData
 ```
 
 #### `putImageData`
 
 ``` purescript
-putImageData :: ImageData -> Number -> Number -> Graphics Unit
+putImageData :: forall m. ImageData -> Number -> Number -> GraphicsT m Unit
 ```
 
 #### `putImageDataFull`
 
 ``` purescript
-putImageDataFull :: ImageData -> Number -> Number -> Number -> Number -> Number -> Number -> Graphics Unit
+putImageDataFull :: forall m. ImageData -> Number -> Number -> Number -> Number -> Number -> Number -> GraphicsT m Unit
 ```
 
 #### `createImageData`
 
 ``` purescript
-createImageData :: Number -> Number -> Graphics ImageData
+createImageData :: forall m. Number -> Number -> GraphicsT m ImageData
 ```
 
 #### `createImageDataCopy`
 
 ``` purescript
-createImageDataCopy :: ImageData -> Graphics ImageData
+createImageDataCopy :: forall m. ImageData -> GraphicsT m ImageData
 ```
 
 #### `drawImage`
 
 ``` purescript
-drawImage :: CanvasImageSource -> Number -> Number -> Graphics Unit
+drawImage :: forall m. CanvasImageSource -> Number -> Number -> GraphicsT m Unit
 ```
 
 #### `runGraphics`
 
 ``` purescript
-runGraphics :: forall a eff. Context2D -> Graphics a -> Eff (canvas :: Canvas | eff) a
+runGraphics :: forall a eff. Context2D -> Graphics a -> Eff (canvas :: CANVAS | eff) a
+```
+
+#### `runGraphicsT`
+
+``` purescript
+runGraphicsT :: forall a eff. Context2D -> GraphicsT (Eff (canvas :: CANVAS | eff)) a -> Eff (canvas :: CANVAS | eff) a
 ```
 
 

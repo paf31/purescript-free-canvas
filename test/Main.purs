@@ -2,14 +2,19 @@ module Test.Main where
 
 import Prelude
 
-import Data.Maybe.Unsafe (fromJust)
+import Control.Monad.Eff (Eff)
+import Data.Maybe (fromJust)
+import Graphics.Canvas (CANVAS, getCanvasElementById, getContext2D)
+import Graphics.Canvas.Free (putImageData, getImageData, stroke, closePath, lineTo,
+                            moveTo, beginPath, translate, strokeText, measureText,
+                            setFont, rotate, scale, setStrokeStyle, setShadowColor,
+                            setShadowOffsetY, setShadowOffsetX, setLineWidth, runGraphics)
+import Partial.Unsafe (unsafePartial)
 
-import Graphics.Canvas (getCanvasElementById, getContext2D)
-import Graphics.Canvas.Free
-
+main :: Eff (canvas :: CANVAS) Unit
 main = do
-  canvas <- fromJust <$> getCanvasElementById "canvas"
-  context <- getContext2D canvas
+  canvas <- getCanvasElementById "canvas"
+  context <- getContext2D (unsafePartial (fromJust canvas))
 
   runGraphics context $ do
     setLineWidth 2.0
@@ -17,9 +22,9 @@ main = do
     setShadowOffsetY 1.0
     setShadowColor "#808080"
     setStrokeStyle "#FF8000"
-    
+
     translate 20.0 20.0
- 
+
     scale 2.0 1.5
     rotate 0.2
 
