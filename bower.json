@@ -22,8 +22,8 @@
     "url": "git://github.com/paf31/purescript-free-canvas.git"
   },
   "dependencies": {
-    "purescript-canvas": "^1.0.0",
-    "purescript-freet": "^1.0.0",
-    "purescript-free": "^1.0.0"
+    "purescript-canvas": "^2.0.0",
+    "purescript-freet": "^2.0.1",
+    "purescript-free": "^3.3.0"
   }
 }
