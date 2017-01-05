@@ -6,10 +6,15 @@
 data GraphicsF more
 ```
 
+##### Instances
+``` purescript
+Functor GraphicsF
+```
+
 #### `GraphicsT`
 
 ``` purescript
-type GraphicsT m = FreeT (Coyoneda GraphicsF) m
+type GraphicsT = FreeT GraphicsF
 ```
 
 #### `Graphics`
@@ -267,13 +272,19 @@ drawImage :: forall m. Monad m => CanvasImageSource -> Number -> Number -> Graph
 #### `runGraphics`
 
 ``` purescript
-runGraphics :: forall a eff. Context2D -> Graphics a -> Eff (canvas :: CANVAS | eff) a
+runGraphics :: forall eff. Context2D -> Graphics ~> (Eff ("canvas" :: CANVAS | eff))
 ```
 
 #### `runGraphicsT`
 
 ``` purescript
-runGraphicsT :: forall a eff. Context2D -> GraphicsT (Eff (canvas :: CANVAS | eff)) a -> Eff (canvas :: CANVAS | eff) a
+runGraphicsT :: forall eff. Context2D -> (GraphicsT (Eff ("canvas" :: CANVAS | eff))) ~> (Eff ("canvas" :: CANVAS | eff))
+```
+
+#### `interpretGraphics`
+
+``` purescript
+interpretGraphics :: forall eff. Context2D -> GraphicsF ~> (Eff ("canvas" :: CANVAS | eff))
 ```
 
 

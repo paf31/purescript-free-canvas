@@ -2,116 +2,110 @@ module Graphics.Canvas.Free
   ( Graphics
   , GraphicsT
   , GraphicsF
-
-  , setLineWidth
-  , setFillStyle
-  , setStrokeStyle
-  , setShadowColor
-  , setShadowBlur
-  , setShadowOffsetX
-  , setShadowOffsetY
-  , setLineCap
-  , setComposite
-  , setAlpha
-
-  , beginPath
-  , stroke
-  , fill
-  , clip
-  , lineTo
-  , moveTo
-  , closePath
-
   , arc
-  , rect
-  , fillRect
-  , strokeRect
+  , beginPath
   , clearRect
-
-  , scale
-  , rotate
-  , translate
-  , transform
-
-  , textAlign
-  , setTextAlign
-  , font
-  , setFont
-  , fillText
-  , strokeText
-  , measureText
-
-  , save
-  , restore
-
-  , getImageData
-  , putImageData
-  , putImageDataFull
+  , clip
+  , closePath
   , createImageData
   , createImageDataCopy
   , drawImage
-
+  , fill
+  , fillRect
+  , fillText
+  , font
+  , getImageData
+  , lineTo
+  , measureText
+  , moveTo
+  , putImageData
+  , putImageDataFull
+  , rect
+  , restore
+  , rotate
+  , save
+  , scale
+  , setAlpha
+  , setComposite
+  , setFillStyle
+  , setFont
+  , setLineCap
+  , setLineWidth
+  , setShadowBlur
+  , setShadowColor
+  , setShadowOffsetX
+  , setShadowOffsetY
+  , setStrokeStyle
+  , setTextAlign
+  , stroke
+  , strokeRect
+  , strokeText
+  , textAlign
+  , transform
+  , translate
   , runGraphics
   , runGraphicsT
+  , interpretGraphics
   ) where
 
 import Prelude
-
 import Control.Monad.Eff (Eff)
 import Control.Monad.Free.Trans (FreeT, liftFreeT, hoistFreeT, runFreeT)
-import Data.Coyoneda (Coyoneda, hoistCoyoneda, liftCoyoneda, lowerCoyoneda)
-import Data.Identity (Identity, runIdentity)
+import Data.Identity (Identity)
+import Data.Newtype (unwrap)
 import Graphics.Canvas as Canvas
 
 data GraphicsF more
-  = SetLineWidth         Number more
-  | SetFillStyle         String more
-  | SetStrokeStyle       String more
-  | SetShadowColor       String more
-  | SetShadowBlur        Number more
-  | SetShadowOffsetX     Number more
-  | SetShadowOffsetY     Number more
-  | SetLineCap           Canvas.LineCap more
-  | SetComposite         Canvas.Composite more
-  | SetAlpha             Number more
-  | BeginPath            more
-  | Stroke               more
-  | Fill                 more
-  | Clip                 more
-  | LineTo               Number Number more
-  | MoveTo               Number Number more
-  | ClosePath            more
-  | Arc                  Canvas.Arc       more
-  | Rect                 Canvas.Rectangle more
-  | FillRect             Canvas.Rectangle more
-  | StrokeRect           Canvas.Rectangle more
-  | ClearRect            Canvas.Rectangle more
-  | Scale                Number Number more
-  | Rotate               Number more
-  | Translate            Number Number more
-  | Transform            Canvas.Transform more
-  | TextAlign            (Canvas.TextAlign -> more)
-  | SetTextAlign         Canvas.TextAlign more
-  | Font                 (String -> more)
-  | SetFont              String more
-  | FillText             String Number Number more
-  | StrokeText           String Number Number more
-  | MeasureText          String (Canvas.TextMetrics -> more)
-  | Save                 more
-  | Restore              more
-  | GetImageData         Number Number Number Number (Canvas.ImageData -> more)
-  | PutImageData         Canvas.ImageData Number Number more
-  | PutImageDataFull     Canvas.ImageData Number Number Number Number Number Number more
-  | CreateImageData      Number Number (Canvas.ImageData -> more)
-  | CreateImageDataCopy  Canvas.ImageData (Canvas.ImageData -> more)
-  | DrawImage            Canvas.CanvasImageSource Number Number more
+  = SetLineWidth Number more
+  | SetFillStyle String more
+  | SetStrokeStyle String more
+  | SetShadowColor String more
+  | SetShadowBlur Number more
+  | SetShadowOffsetX Number more
+  | SetShadowOffsetY Number more
+  | SetLineCap Canvas.LineCap more
+  | SetComposite Canvas.Composite more
+  | SetAlpha Number more
+  | BeginPath more
+  | Stroke more
+  | Fill more
+  | Clip more
+  | LineTo Number Number more
+  | MoveTo Number Number more
+  | ClosePath more
+  | Arc Canvas.Arc more
+  | Rect Canvas.Rectangle more
+  | FillRect Canvas.Rectangle more
+  | StrokeRect Canvas.Rectangle more
+  | ClearRect Canvas.Rectangle more
+  | Scale Number Number more
+  | Rotate Number more
+  | Translate Number Number more
+  | Transform Canvas.Transform more
+  | TextAlign (Canvas.TextAlign -> more)
+  | SetTextAlign Canvas.TextAlign more
+  | Font (String -> more)
+  | SetFont String more
+  | FillText String Number Number more
+  | StrokeText String Number Number more
+  | MeasureText String (Canvas.TextMetrics -> more)
+  | Save more
+  | Restore more
+  | GetImageData Number Number Number Number (Canvas.ImageData -> more)
+  | PutImageData Canvas.ImageData Number Number more
+  | PutImageDataFull Canvas.ImageData Number Number Number Number Number Number more
+  | CreateImageData Number Number (Canvas.ImageData -> more)
+  | CreateImageDataCopy Canvas.ImageData (Canvas.ImageData -> more)
+  | DrawImage Canvas.CanvasImageSource Number Number more
 
-type GraphicsT m = FreeT (Coyoneda GraphicsF) m
+derive instance functorGraphicsF :: Functor GraphicsF
+
+type GraphicsT = FreeT GraphicsF
 
 type Graphics = GraphicsT Identity
 
-liftGraphics :: forall m a. Monad m => GraphicsF a -> GraphicsT m a
-liftGraphics = liftFreeT <<< liftCoyoneda
+liftGraphics :: forall m. Monad m => GraphicsF ~> GraphicsT m
+liftGraphics = liftFreeT
 
 setLineWidth :: forall m. Monad m => Number -> GraphicsT m Unit
 setLineWidth w = liftGraphics $ SetLineWidth w unit
@@ -237,100 +231,100 @@ drawImage :: forall m. Monad m => Canvas.CanvasImageSource -> Number -> Number -
 drawImage src x y = liftGraphics $ DrawImage src x y unit
 
 runGraphics
-  :: forall a eff
+  :: forall eff
    . Canvas.Context2D
-  -> Graphics a
-  -> Eff (canvas :: Canvas.CANVAS | eff) a
-runGraphics ctx = runFreeT (lowerCoyoneda <<< hoistCoyoneda (interp ctx))
-              <<< hoistFreeT (pure <<< runIdentity)
+  -> Graphics
+  ~> Eff (canvas :: Canvas.CANVAS | eff)
+runGraphics ctx = runFreeT (interpretGraphics ctx) <<< hoistFreeT (pure <<< unwrap)
 
 runGraphicsT
-  :: forall a eff
+  :: forall eff
    . Canvas.Context2D
-  -> GraphicsT (Eff (canvas :: Canvas.CANVAS | eff)) a
-  -> Eff (canvas :: Canvas.CANVAS | eff) a
-runGraphicsT ctx = runFreeT (lowerCoyoneda <<< hoistCoyoneda (interp ctx))
+  -> GraphicsT (Eff (canvas :: Canvas.CANVAS | eff))
+  ~> Eff (canvas :: Canvas.CANVAS | eff)
+runGraphicsT ctx = runFreeT (interpretGraphics ctx)
 
-interp :: forall eff. Canvas.Context2D -> GraphicsF ~> Eff (canvas :: Canvas.CANVAS | eff)
-interp ctx (SetLineWidth w a) =
-  const a <$> Canvas.setLineWidth w ctx
-interp ctx (SetFillStyle s a) =
-  const a <$> Canvas.setFillStyle s ctx
-interp ctx (SetStrokeStyle s a) =
-  const a <$> Canvas.setStrokeStyle s ctx
-interp ctx (SetShadowColor c a) =
-  const a <$> Canvas.setShadowColor c ctx
-interp ctx (SetShadowBlur n a) =
-  const a <$> Canvas.setShadowBlur n ctx
-interp ctx (SetShadowOffsetX n a) =
-  const a <$> Canvas.setShadowOffsetX n ctx
-interp ctx (SetShadowOffsetY n a) =
-  const a <$> Canvas.setShadowOffsetY n ctx
-interp ctx (SetLineCap lc a) =
-  const a <$> Canvas.setLineCap lc ctx
-interp ctx (SetComposite c a) =
-  const a <$> Canvas.setGlobalCompositeOperation ctx c
-interp ctx (SetAlpha s a) =
-  const a <$> Canvas.setGlobalAlpha ctx s
-interp ctx (BeginPath a) =
-  const a <$> Canvas.beginPath ctx
-interp ctx (Stroke a) =
-  const a <$> Canvas.stroke ctx
-interp ctx (Fill a) =
-  const a <$> Canvas.fill ctx
-interp ctx (Clip a) =
-  const a <$> Canvas.clip ctx
-interp ctx (LineTo x y a) =
-  const a <$> Canvas.lineTo ctx x y
-interp ctx (MoveTo x y a) =
-  const a <$> Canvas.moveTo ctx x y
-interp ctx (ClosePath a) =
-  const a <$> Canvas.closePath ctx
-interp ctx (Arc arc_ a) =
-  const a <$> Canvas.arc ctx arc_
-interp ctx (Rect r a) =
-  const a <$> Canvas.rect ctx r
-interp ctx (FillRect r a) =
-  const a <$> Canvas.fillRect ctx r
-interp ctx (StrokeRect r a) =
-  const a <$> Canvas.strokeRect ctx r
-interp ctx (ClearRect r a) =
-  const a <$> Canvas.clearRect ctx r
-interp ctx (Scale sx sy a) =
-  const a <$> Canvas.scale { scaleX: sx, scaleY: sy } ctx
-interp ctx (Rotate th a) =
-  const a <$> Canvas.rotate th ctx
-interp ctx (Translate tx ty a) =
-  const a <$> Canvas.translate { translateX: tx, translateY: ty } ctx
-interp ctx (Transform tx a) =
-  const a <$> Canvas.transform tx ctx
-interp ctx (TextAlign k) =
-  k <$> Canvas.textAlign ctx
-interp ctx (SetTextAlign ta a) =
-  const a <$> Canvas.setTextAlign ctx ta
-interp ctx (Font k) =
-  k <$> Canvas.font ctx
-interp ctx (SetFont f a) =
-  const a <$> Canvas.setFont f ctx
-interp ctx (FillText s x y a) =
-  const a <$> Canvas.fillText ctx s x y
-interp ctx (StrokeText s x y a) =
-  const a <$> Canvas.strokeText ctx s x y
-interp ctx (MeasureText s k) =
-  k <$> Canvas.measureText ctx s
-interp ctx (Save a) =
-  const a <$> Canvas.save ctx
-interp ctx (Restore a) =
-  const a <$> Canvas.restore ctx
-interp ctx (GetImageData x y w h k) =
-  k <$> Canvas.getImageData ctx x y w h
-interp ctx (PutImageData d x y a) =
-  const a <$> Canvas.putImageData ctx d x y
-interp ctx (PutImageDataFull d x y dx dy dw dh a) =
-  const a <$> Canvas.putImageDataFull ctx d x y dx dy dw dh
-interp ctx (CreateImageData w h k) =
-  k <$> Canvas.createImageData ctx w h
-interp ctx (CreateImageDataCopy d k) =
-  k <$> Canvas.createImageDataCopy ctx d
-interp ctx (DrawImage src x y a) =
-  const a <$> Canvas.drawImage ctx src x y
+interpretGraphics :: forall eff. Canvas.Context2D -> GraphicsF ~> Eff (canvas :: Canvas.CANVAS | eff)
+interpretGraphics ctx = go where
+  go (SetLineWidth w a) =
+    const a <$> Canvas.setLineWidth w ctx
+  go (SetFillStyle s a) =
+    const a <$> Canvas.setFillStyle s ctx
+  go (SetStrokeStyle s a) =
+    const a <$> Canvas.setStrokeStyle s ctx
+  go (SetShadowColor c a) =
+    const a <$> Canvas.setShadowColor c ctx
+  go (SetShadowBlur n a) =
+    const a <$> Canvas.setShadowBlur n ctx
+  go (SetShadowOffsetX n a) =
+    const a <$> Canvas.setShadowOffsetX n ctx
+  go (SetShadowOffsetY n a) =
+    const a <$> Canvas.setShadowOffsetY n ctx
+  go (SetLineCap lc a) =
+    const a <$> Canvas.setLineCap lc ctx
+  go (SetComposite c a) =
+    const a <$> Canvas.setGlobalCompositeOperation ctx c
+  go (SetAlpha s a) =
+    const a <$> Canvas.setGlobalAlpha ctx s
+  go (BeginPath a) =
+    const a <$> Canvas.beginPath ctx
+  go (Stroke a) =
+    const a <$> Canvas.stroke ctx
+  go (Fill a) =
+    const a <$> Canvas.fill ctx
+  go (Clip a) =
+    const a <$> Canvas.clip ctx
+  go (LineTo x y a) =
+    const a <$> Canvas.lineTo ctx x y
+  go (MoveTo x y a) =
+    const a <$> Canvas.moveTo ctx x y
+  go (ClosePath a) =
+    const a <$> Canvas.closePath ctx
+  go (Arc arc_ a) =
+    const a <$> Canvas.arc ctx arc_
+  go (Rect r a) =
+    const a <$> Canvas.rect ctx r
+  go (FillRect r a) =
+    const a <$> Canvas.fillRect ctx r
+  go (StrokeRect r a) =
+    const a <$> Canvas.strokeRect ctx r
+  go (ClearRect r a) =
+    const a <$> Canvas.clearRect ctx r
+  go (Scale sx sy a) =
+    const a <$> Canvas.scale { scaleX: sx, scaleY: sy } ctx
+  go (Rotate th a) =
+    const a <$> Canvas.rotate th ctx
+  go (Translate tx ty a) =
+    const a <$> Canvas.translate { translateX: tx, translateY: ty } ctx
+  go (Transform tx a) =
+    const a <$> Canvas.transform tx ctx
+  go (TextAlign k) =
+    k <$> Canvas.textAlign ctx
+  go (SetTextAlign ta a) =
+    const a <$> Canvas.setTextAlign ctx ta
+  go (Font k) =
+    k <$> Canvas.font ctx
+  go (SetFont f a) =
+    const a <$> Canvas.setFont f ctx
+  go (FillText s x y a) =
+    const a <$> Canvas.fillText ctx s x y
+  go (StrokeText s x y a) =
+    const a <$> Canvas.strokeText ctx s x y
+  go (MeasureText s k) =
+    k <$> Canvas.measureText ctx s
+  go (Save a) =
+    const a <$> Canvas.save ctx
+  go (Restore a) =
+    const a <$> Canvas.restore ctx
+  go (GetImageData x y w h k) =
+    k <$> Canvas.getImageData ctx x y w h
+  go (PutImageData d x y a) =
+    const a <$> Canvas.putImageData ctx d x y
+  go (PutImageDataFull d x y dx dy dw dh a) =
+    const a <$> Canvas.putImageDataFull ctx d x y dx dy dw dh
+  go (CreateImageData w h k) =
+    k <$> Canvas.createImageData ctx w h
+  go (CreateImageDataCopy d k) =
+    k <$> Canvas.createImageDataCopy ctx d
+  go (DrawImage src x y a) =
+    const a <$> Canvas.drawImage ctx src x y
