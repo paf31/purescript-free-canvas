@@ -10,6 +10,8 @@ module Graphics.Canvas.Free
   , createImageData
   , createImageDataCopy
   , drawImage
+  , drawImageScale
+  , drawImageFull
   , fill
   , fillRect
   , fillText
@@ -97,6 +99,8 @@ data GraphicsF more
   | CreateImageData Number Number (Canvas.ImageData -> more)
   | CreateImageDataCopy Canvas.ImageData (Canvas.ImageData -> more)
   | DrawImage Canvas.CanvasImageSource Number Number more
+  | DrawImageScale Canvas.CanvasImageSource Number Number Number Number more
+  | DrawImageFull Canvas.CanvasImageSource Number Number Number Number Number Number Number Number more
 
 derive instance functorGraphicsF :: Functor GraphicsF
 
@@ -230,6 +234,12 @@ createImageDataCopy d = liftGraphics $ CreateImageDataCopy d id
 drawImage :: forall m. Monad m => Canvas.CanvasImageSource -> Number -> Number -> GraphicsT m Unit
 drawImage src x y = liftGraphics $ DrawImage src x y unit
 
+drawImageScale :: forall m. Monad m => Canvas.CanvasImageSource -> Number -> Number -> Number -> Number -> GraphicsT m Unit
+drawImageScale src x y w h = liftGraphics $ DrawImageScale src x y w h unit
+
+drawImageFull :: forall m. Monad m => Canvas.CanvasImageSource -> Number -> Number -> Number -> Number -> Number -> Number -> Number -> Number -> GraphicsT m Unit
+drawImageFull src sx sy sw sh dx dy dw dh = liftGraphics $ DrawImageFull src sx sy sw sh dx dy dw dh unit
+
 runGraphics
   :: forall eff
    . Canvas.Context2D
@@ -328,3 +338,7 @@ interpretGraphics ctx = go where
     k <$> Canvas.createImageDataCopy ctx d
   go (DrawImage src x y a) =
     const a <$> Canvas.drawImage ctx src x y
+  go (DrawImageScale src x y w h a) =
+    const a <$> Canvas.drawImageScale ctx src x y w h
+  go (DrawImageFull src sx sy sw sh dx dy dw dh a) =
+    const a <$> Canvas.drawImageFull ctx src sx sy sw sh dx dy dw dh
