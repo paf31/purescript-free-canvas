@@ -269,22 +269,34 @@ createImageDataCopy :: forall m. Monad m => ImageData -> GraphicsT m ImageData
 drawImage :: forall m. Monad m => CanvasImageSource -> Number -> Number -> GraphicsT m Unit
 ```
 
+#### `drawImageScale`
+
+``` purescript
+drawImageScale :: forall m. Monad m => CanvasImageSource -> Number -> Number -> Number -> Number -> GraphicsT m Unit
+```
+
+#### `drawImageFull`
+
+``` purescript
+drawImageFull :: forall m. Monad m => CanvasImageSource -> Number -> Number -> Number -> Number -> Number -> Number -> Number -> Number -> GraphicsT m Unit
+```
+
 #### `runGraphics`
 
 ``` purescript
-runGraphics :: forall eff. Context2D -> Graphics ~> (Eff ("canvas" :: CANVAS | eff))
+runGraphics :: forall eff. Context2D -> Graphics ~> (Eff (canvas :: CANVAS | eff))
 ```
 
 #### `runGraphicsT`
 
 ``` purescript
-runGraphicsT :: forall eff. Context2D -> (GraphicsT (Eff ("canvas" :: CANVAS | eff))) ~> (Eff ("canvas" :: CANVAS | eff))
+runGraphicsT :: forall eff. Context2D -> (GraphicsT (Eff (canvas :: CANVAS | eff))) ~> (Eff (canvas :: CANVAS | eff))
 ```
 
 #### `interpretGraphics`
 
 ``` purescript
-interpretGraphics :: forall eff. Context2D -> GraphicsF ~> (Eff ("canvas" :: CANVAS | eff))
+interpretGraphics :: forall eff. Context2D -> GraphicsF ~> (Eff (canvas :: CANVAS | eff))
 ```
 
 
