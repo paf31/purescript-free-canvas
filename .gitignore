@@ -1,5 +1,6 @@
 .*
 !/.bowerrc
+!/.travis.yml
 !/.gitignore
 /output/
 /node_modules/
